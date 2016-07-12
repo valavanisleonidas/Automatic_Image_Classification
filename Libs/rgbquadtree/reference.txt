@@ -1,0 +1,15 @@
+Murtaza Khan and Yoshio Ohno, "A hybrid image compression technique using quadtree decomposition and parametric line fitting for synthetic images". Advances in Computer Science and Engineering, 1 (3), pp. 263-283, Nov. 2007.
+------------------------------------------------------------
+Bibtex entry
+
+@article{KhanOhnoACSENov2007,
+ author    = {Murtaza Khan and Y. Ohno},
+ title = {A hybrid image compression technique using quadtree decomposition and parametric line fitting for synthetic images},
+ journal = {Advances in Computer Science and Engineering},
+ volume = {1},
+ number = {3},
+ year = {2007},
+ issn = {0973-6999},
+ pages = {263--283},
+ publisher = {Pushpa Publishing House},
+ }
