@@ -1,2 +1,2 @@
-# Automatic_Image_Classification
+# Automatic Image Classification
 Image Classification techniques with UI
