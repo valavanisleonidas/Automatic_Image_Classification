@@ -5,7 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.eclipse.swt.widgets.Shell;
@@ -21,12 +23,12 @@ public class test_wordEmbeddings {
     private static List<String> stopwords = new ArrayList<String>();
     private static String commonWordsPath = "Lucene\\common_words";
     private static boolean removeStopwords = false;
-    private static boolean AddZeroIfTermDoesNotExist = false;
-    private static String xml_path = "Lucene\\clef2016\\original\\";
-    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\Clef2016\\original";
+    private static boolean AddZeroIfTermDoesNotExist = true;
+    private static String xml_path = "Lucene\\clef2013\\";
+    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2013\\Compound";
     
 	public static void main(String[] args) throws Exception{
-		
+
     	String stopwordsName = "withCommonWords";
     	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
 
@@ -63,6 +65,16 @@ public class test_wordEmbeddings {
         Utilities.write2TXT(test_features,test_file, null);
 		
 	}
+	
+	public static boolean containsSubArray(List<double[]> list, double[] subarray) {
+		   for ( double[] arr : list ) {
+			  if (Arrays.equals(arr, subarray)) {
+		         return true;
+		      }
+		   }
+		   return false;
+		}
+	
 	
 	public static void test_centroid(){
 		
@@ -116,6 +128,7 @@ public class test_wordEmbeddings {
 		int total_words_found = 0;
 		int total_words_not_found = 0;
 		int currentDoc = 0;
+		Map<String,Double> word_idf = new HashMap<String,Double>();
 		
 		List<double[]> features = new ArrayList<double[]>();
 
@@ -123,7 +136,7 @@ public class test_wordEmbeddings {
 		xml.ReadXml(xml_dir, null,databasePath,mode);
 		
 		List<TextualData> images = xml.getImages();
-		List<String[]> termDocsArray = getAllTermDocs(images);
+		List<String[]> AlltermDocsArray = getAllTermDocs(images);
 		
 		//each row contains one doc (image)    	
         for (TextualData image :  images) {
@@ -132,10 +145,12 @@ public class test_wordEmbeddings {
         	String imagePath = image.category+"/"+image.id+".jpg";
         	
         	
-	        	int total_words = total_words_not_found+total_words_found;
-	        	System.out.println("processing doc number : "+currentDoc++ 
-	        			+ " id : "+imagePath+" , found "+ total_words_found+", not found "+total_words_not_found+" out of "+ total_words +", doc  :"+ doc);
+//        	int total_words = total_words_not_found+total_words_found;
+//        	System.out.println("processing doc number : "+currentDoc++ 
+//        			+ " id : "+imagePath+" , found "+ total_words_found+", not found "+total_words_not_found+" out of "+ total_words +", doc  :"+ doc);
         	
+        	
+        	Map<String,double[]> Doc_word_embeddings = new HashMap<String,double[]>();
         	List<double[]> doc_term_embeddings = new ArrayList<double[]>();
         	//get individual terms of sentence
         	String[] docTerms = doc.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");   
@@ -145,18 +160,36 @@ public class test_wordEmbeddings {
     			
     			if(removeStopwords){
     				//avoid stopwords
-	            	if(stopwords.contains(term)){ 
+	            	if(stopwords.contains(termLower)){ 
 	            		continue;
 	            	}
             	}
     			
         		if(words.contains(termLower)){
-        			//calculate idf
-        			double idf = new TfIdf().idfCalculator(termDocsArray, termLower);
+        			//if term exists already in document continue
+        			if(Doc_word_embeddings.containsKey(termLower)){
+        				continue;
+        			}
+        			
         			//get embedding
         			term_embedding = embeddings.get(words.indexOf(termLower));
+        			
+        			double tf =  new TfIdf().tfCalculator(docTerms, termLower);
+        			
+        			double idf;
+        			if(word_idf.containsKey(termLower)){
+        				idf = word_idf.get(termLower);
+        			}
+        			else{
+        				//calculate idf
+        				idf = new TfIdf().idfCalculator(AlltermDocsArray, termLower);
+        				word_idf.put(termLower, idf);
+        			}
+        			double tfidf = tf*idf; 
         			//multiply with idf
-        			term_embedding = WeightArray(term_embedding, idf);
+        			term_embedding = WeightArray(term_embedding, tfidf);
+        			Doc_word_embeddings.put(termLower, term_embedding);
+        			
         			//add to list
         			doc_term_embeddings.add(term_embedding);
         			
