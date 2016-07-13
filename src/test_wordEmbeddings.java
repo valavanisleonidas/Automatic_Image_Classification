@@ -26,6 +26,9 @@ public class test_wordEmbeddings {
     private static boolean AddZeroIfTermDoesNotExist = true;
     private static String xml_path = "Lucene\\clef2013\\";
     private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2013\\Compound";
+    private static String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
+    private static String embeddingsFilePath = "E:\\leonidas\\word2vecTools\\vectors.txt";
+    private static int embeddingsLength = 0;
     
 	public static void main(String[] args) throws Exception{
 
@@ -49,23 +52,36 @@ public class test_wordEmbeddings {
 		System.out.println(train_file);
 		System.out.println(test_file);
 		
-		String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
-		String embeddingsFilePath = "E:\\leonidas\\word2vecTools\\vectors.txt";
 		
 		System.out.println("loading embeddings...");
-		List<double[]> embeddings = readEmbeddingsFromFile(embeddingsFilePath, null);
-		List<String> words = readWordsFromFile(typeFilePath, null);
+		
+		Map<String,double[]> word_embeddings = getEmbeddings();
+		
 		
         System.out.println("extracting train features...");
-		List<double[]> train_features = get_features(words,embeddings,train_dir,"train");
+		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
         Utilities.write2TXT(train_features,train_file, null);
 
         System.out.println("extracting test features...");
-        List<double[]> test_features = get_features(words,embeddings,test_dir,"test");
+        List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
         Utilities.write2TXT(test_features,test_file, null);
 		
 	}
 	
+	private static Map<String, double[]> getEmbeddings() throws Exception {
+		List<double[]> embeddings = readEmbeddingsFromFile(embeddingsFilePath, null);
+		List<String> words = readWordsFromFile(typeFilePath, null);
+		embeddingsLength = embeddings.get(0).length;
+		
+		Map<String,double[]> word_embeddings = new HashMap<String,double[]>();
+		for(int i=0;i<embeddings.size();i++){
+			word_embeddings.put(words.get(i), embeddings.get(i)); 
+		}
+		embeddings.clear();
+		words.clear();
+		return word_embeddings;
+	}
+
 	public static boolean containsSubArray(List<double[]> list, double[] subarray) {
 		   for ( double[] arr : list ) {
 			  if (Arrays.equals(arr, subarray)) {
@@ -122,7 +138,7 @@ public class test_wordEmbeddings {
 
 	}
 	
-	public static List<double[]> get_features(List<String> words, List<double[]> embeddings,
+	public static List<double[]> get_features(Map<String,double[]> word_embeddings,
 			String xml_dir, String mode) throws Exception{
 		
 		int total_words_found = 0;
@@ -144,19 +160,19 @@ public class test_wordEmbeddings {
         	
         	String imagePath = image.category+"/"+image.id+".jpg";
         	
-        	
-//        	int total_words = total_words_not_found+total_words_found;
-//        	System.out.println("processing doc number : "+currentDoc++ 
-//        			+ " id : "+imagePath+" , found "+ total_words_found+", not found "+total_words_not_found+" out of "+ total_words +", doc  :"+ doc);
-        	
+        	currentDoc++;
+        	if(currentDoc%100 == 0){
+	        	int total_words = total_words_not_found+total_words_found;
+	        	System.out.println("processing doc number : "+currentDoc 
+	        			+ " id : "+imagePath+" , found "+ total_words_found+", not found "+total_words_not_found+" out of "+ total_words +", doc  :"+ doc);
+        	}
         	
         	Map<String,double[]> Doc_word_embeddings = new HashMap<String,double[]>();
-        	List<double[]> doc_term_embeddings = new ArrayList<double[]>();
         	//get individual terms of sentence
         	String[] docTerms = doc.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");   
         	for(String term : docTerms){
         		String termLower = term.toLowerCase(); 
-    			double[] term_embedding = new double[embeddings.get(0).length];
+    			double[] term_embedding = new double[embeddingsLength];
     			
     			if(removeStopwords){
     				//avoid stopwords
@@ -164,15 +180,15 @@ public class test_wordEmbeddings {
 	            		continue;
 	            	}
             	}
+    			//if term exists already in document continue
+    			if(Doc_word_embeddings.containsKey(termLower)){
+    				continue;
+    			}
     			
-        		if(words.contains(termLower)){
-        			//if term exists already in document continue
-        			if(Doc_word_embeddings.containsKey(termLower)){
-        				continue;
-        			}
+        		if(word_embeddings.containsKey(termLower)){
         			
         			//get embedding
-        			term_embedding = embeddings.get(words.indexOf(termLower));
+        			term_embedding = word_embeddings.get(termLower);
         			
         			double tf =  new TfIdf().tfCalculator(docTerms, termLower);
         			
@@ -190,9 +206,6 @@ public class test_wordEmbeddings {
         			term_embedding = WeightArray(term_embedding, tfidf);
         			Doc_word_embeddings.put(termLower, term_embedding);
         			
-        			//add to list
-        			doc_term_embeddings.add(term_embedding);
-        			
         			total_words_found++;
         		}
         		//TODO add caching mechanism
@@ -204,16 +217,16 @@ public class test_wordEmbeddings {
         			if(AddZeroIfTermDoesNotExist){
         				//add zeros
 	            		Arrays.fill(term_embedding, 0);
-	        			doc_term_embeddings.add(term_embedding);
-        			}
+	            		Doc_word_embeddings.put(termLower, term_embedding);
+	        		}
         			total_words_not_found++;
         		}
         	}
-        	double[] feature_vector = new double[embeddings.get(0).length];
-        	if(doc_term_embeddings.size() == 0){
+        	double[] feature_vector = new double[embeddingsLength];
+        	if(Doc_word_embeddings.size() == 0){
         		Arrays.fill(feature_vector, 0);
         	}else{
-        		feature_vector = getCentroid(doc_term_embeddings.toArray(new double[doc_term_embeddings.size()][doc_term_embeddings.get(0).length]));
+        		feature_vector = getCentroid(Doc_word_embeddings.values().toArray(new double[Doc_word_embeddings.size()][embeddingsLength]));
         	}
         	features.add(feature_vector);
         }
