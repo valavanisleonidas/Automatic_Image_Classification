@@ -47,12 +47,12 @@ public class Read_Xml {
 	
 	public static void main (String [] args) throws Exception{
 		
-		String train = "Lucene\\clef2013\\train_figures.xml";
-        String test_dir = "Lucene\\clef2013\\test_figures.xml";
-		String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\Clef2013\\Compound";
-		String mode = "test";
+		String train = "Lucene\\clef2012\\train_figures.xml";
+        String test_dir = "Lucene\\clef2012\\test_figures.xml";
+		String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\Clef2012";
+		String mode = "train";
 		Read_Xml xml = new Read_Xml();
-		xml.ReadXml(test_dir, null,databasePath,mode);
+		xml.ReadXml(train, null,databasePath,mode);
 		
 		for (TextualData image : xml.images) {
 			System.out.println("id :"+image.id +" caption :"+ image.AllFields);
@@ -197,8 +197,9 @@ public class Read_Xml {
 							   previousExists = true;
 						   }
 						   image.AllFields = title+" "+ caption ;
-							   
+							
 						   images.add(image);
+						   //System.out.println(image.id);
 						   //System.out.println(id +" "+category +" "+title+" "+ caption);
 					  }
 				   }
@@ -266,7 +267,7 @@ public class Read_Xml {
  			if(index == i) continue;
  			
  			if(index == -1){
- 				System.out.println("file did not found :"+imageName);
+ 				System.out.println("file was not found :"+imageName);
  			}
  			swapElements(i,index);
  		}

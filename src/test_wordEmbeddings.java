@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +24,10 @@ public class test_wordEmbeddings {
     private static List<String> stopwords = new ArrayList<String>();
     private static String commonWordsPath = "Lucene\\common_words";
     private static boolean removeStopwords = false;
-    private static boolean AddZeroIfTermDoesNotExist = true;
-    private static String xml_path = "Lucene\\clef2013\\";
-    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2013\\Compound";
+    private static boolean AddZeroIfTermDoesNotExist = false;
+    private static boolean useTFIDF = true;
+    private static String xml_path = "Lucene\\clef2012\\";
+    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2012";
     private static String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
     private static String embeddingsFilePath = "E:\\leonidas\\word2vecTools\\vectors.txt";
     private static int embeddingsLength = 0;
@@ -34,7 +36,12 @@ public class test_wordEmbeddings {
 
     	String stopwordsName = "withCommonWords";
     	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
-
+    	String tfidf = "_tf";
+    	
+    	if(useTFIDF){
+    		tfidf = "_tfidf";
+    	}
+    	
     	if(removeStopwords){
     		stopwordsName="NoCommonWords";
 			stopwords = ReadStopwords(commonWordsPath, null);
@@ -42,21 +49,19 @@ public class test_wordEmbeddings {
     	if(AddZeroIfTermDoesNotExist)
     		zeroIfTermNotExist = "_zeroIfTermNotExists";
     	
-		
 		String train_dir = xml_path+"train_figures.xml";
         String test_dir = xml_path+"test_figures.xml";
 		
-        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+".txt";
-		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+".txt";
+        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
+		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
 
 		System.out.println(train_file);
 		System.out.println(test_file);
 		
-		
 		System.out.println("loading embeddings...");
 		
-		Map<String,double[]> word_embeddings = getEmbeddings();
 		
+		Map<String,double[]> word_embeddings = readEmbeddings();
 		
         System.out.println("extracting train features...");
 		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
@@ -67,20 +72,6 @@ public class test_wordEmbeddings {
         Utilities.write2TXT(test_features,test_file, null);
 		
 	}
-	
-	private static Map<String, double[]> getEmbeddings() throws Exception {
-		List<double[]> embeddings = readEmbeddingsFromFile(embeddingsFilePath, null);
-		List<String> words = readWordsFromFile(typeFilePath, null);
-		embeddingsLength = embeddings.get(0).length;
-		
-		Map<String,double[]> word_embeddings = new HashMap<String,double[]>();
-		for(int i=0;i<embeddings.size();i++){
-			word_embeddings.put(words.get(i), embeddings.get(i)); 
-		}
-		embeddings.clear();
-		words.clear();
-		return word_embeddings;
-	}
 
 	public static boolean containsSubArray(List<double[]> list, double[] subarray) {
 		   for ( double[] arr : list ) {
@@ -90,7 +81,6 @@ public class test_wordEmbeddings {
 		   }
 		   return false;
 		}
-	
 	
 	public static void test_centroid(){
 		
@@ -122,19 +112,19 @@ public class test_wordEmbeddings {
 	}
 	
 	public static void test_text() throws Exception{
-		//processing doc number : 1803, doc  :SKIN AS A MARKER OF INTERNAL DISEASE: A CASE OF SARCOIDOSIS Chest X-ray
-		String text = "SKIN AS A MARKER OF INTERNAL DISEASE: A CASE OF SARCOIDOSIS Chest X-ray";
-		String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
-		List<String> words = readWordsFromFile(typeFilePath, null);
-		String[] docTerms = text.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");
-		for(String term : docTerms){
-    		
-    		if(words.contains(term.toLowerCase())){
-    			
-    			System.out.println("found term "+ term + " , index "+ words.indexOf(term.toLowerCase()));
-    		}
-    		
-    	}
+//		//processing doc number : 1803, doc  :SKIN AS A MARKER OF INTERNAL DISEASE: A CASE OF SARCOIDOSIS Chest X-ray
+//		String text = "SKIN AS A MARKER OF INTERNAL DISEASE: A CASE OF SARCOIDOSIS Chest X-ray";
+//		String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
+//		List<String> words = readWordsFromFile(typeFilePath, null);
+//		String[] docTerms = text.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");
+//		for(String term : docTerms){
+//    		
+//    		if(words.contains(term.toLowerCase())){
+//    			
+//    			System.out.println("found term "+ term + " , index "+ words.indexOf(term.toLowerCase()));
+//    		}
+//    		
+//    	}
 
 	}
 	
@@ -172,6 +162,11 @@ public class test_wordEmbeddings {
         	String[] docTerms = doc.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");   
         	for(String term : docTerms){
         		String termLower = term.toLowerCase(); 
+        		//if term exists already in document continue
+    			if(Doc_word_embeddings.containsKey(termLower)){
+    				continue;
+    			}
+    			
     			double[] term_embedding = new double[embeddingsLength];
     			
     			if(removeStopwords){
@@ -180,10 +175,6 @@ public class test_wordEmbeddings {
 	            		continue;
 	            	}
             	}
-    			//if term exists already in document continue
-    			if(Doc_word_embeddings.containsKey(termLower)){
-    				continue;
-    			}
     			
         		if(word_embeddings.containsKey(termLower)){
         			
@@ -191,29 +182,28 @@ public class test_wordEmbeddings {
         			term_embedding = word_embeddings.get(termLower);
         			
         			double tf =  new TfIdf().tfCalculator(docTerms, termLower);
+        			double tfidf = tf; 
         			
-        			double idf;
-        			if(word_idf.containsKey(termLower)){
-        				idf = word_idf.get(termLower);
+        			if(useTFIDF){
+        			
+	        			double idf;
+	        			if(word_idf.containsKey(termLower)){
+	        				idf = word_idf.get(termLower);
+	        			}
+	        			else{
+	        				//calculate idf
+	        				idf = new TfIdf().idfCalculator(AlltermDocsArray, termLower);
+	        				word_idf.put(termLower, idf);
+	        			}
+	        			tfidf *= idf;
         			}
-        			else{
-        				//calculate idf
-        				idf = new TfIdf().idfCalculator(AlltermDocsArray, termLower);
-        				word_idf.put(termLower, idf);
-        			}
-        			double tfidf = tf*idf; 
         			//multiply with idf
         			term_embedding = WeightArray(term_embedding, tfidf);
         			Doc_word_embeddings.put(termLower, term_embedding);
         			
         			total_words_found++;
         		}
-        		//TODO add caching mechanism
-        		
-        		//TODO find nearest word to centroid and idf with the final word 
-        		//TODO Normalization L1,L2 ktlp TRYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
         		else{
-        			
         			if(AddZeroIfTermDoesNotExist){
         				//add zeros
 	            		Arrays.fill(term_embedding, 0);
@@ -233,6 +223,7 @@ public class test_wordEmbeddings {
 		System.out.println("words found : " +total_words_found +"  : not found "+ total_words_not_found);
 		return features;
 	}
+	
 	
 	//get sum of each column and divide by columns size
 	public static double[] getCentroid(double[][] doc_embeddings){
@@ -270,82 +261,52 @@ public class test_wordEmbeddings {
 		return termsDocsArray;
 	}
 	
-	public static List<String> readWordsFromFile(String filePath,Shell shell) throws Exception {
-
-		   List<String> centroid = new ArrayList<String>();
-		   BufferedReader reader = null;	    
-		 	try {
-		 		reader = new BufferedReader(new FileReader(new File(filePath)));
-			} catch (FileNotFoundException e1) {
-				Utilities.showMessage("Could not Read File!", shell, true);
-				e1.printStackTrace();
-
-				return null;
-			}
-			
-			String line=null;
-			   try {
-				   while ((line = reader.readLine()) != null){ 
-					   centroid.add(line);				 
-				   }
-				  
-			   }catch(Exception e){
-					Utilities.showMessage("Error reading file!", shell, true);
-					e.printStackTrace();
-		 			return null;
-			   }
-			   try {
-				   reader.close();
-			   }catch (FileNotFoundException e) {
-					Utilities.showMessage("Could not close File!", shell, true);
-					e.printStackTrace();
-
-		 			return null;
-			   }
-			   return centroid;
+	public static double[] extractEmbeddingFromText(String embeddingLine){
+		
+		int count = 0;
+		StringTokenizer tokenizedLine = new StringTokenizer(embeddingLine," ");
+		double[] feature = new double[tokenizedLine.countTokens()];
+			  						  
+		while(tokenizedLine.hasMoreTokens()){
+			feature[count]=Double.parseDouble(tokenizedLine.nextToken());
+			count++;
+		}
+		return feature;
+		
 	}
 	
-	public static List<double[]> readEmbeddingsFromFile(String filePath,Shell shell) throws Exception {
-
-		   List<double[]> centroid=new ArrayList<double[]>();
-		   BufferedReader reader = null;	    
-		 	try {
-		 		reader = new BufferedReader(new FileReader(new File(filePath)));
-			} catch (FileNotFoundException e1) {
-				Utilities.showMessage("Could not Read File!", shell, true);
-				e1.printStackTrace();
-
-				return null;
+	
+	public static Map<String,double[]> readEmbeddings() throws Exception {
+		
+		Map<String,double[]> words_embeddings = new HashMap<String,double[]>();
+		BufferedReader words_reader = Utilities.openFilesForReading(typeFilePath, null);
+		BufferedReader embeddings_reader = Utilities.openFilesForReading(embeddingsFilePath, null);
+		
+		String word_line = "";
+		String embedding_line = "";
+		try {
+			while (((word_line = words_reader.readLine()) != null) && ((embedding_line = embeddings_reader.readLine()) != null))
+			{
+				double[] embedding = extractEmbeddingFromText(embedding_line);
+				//put into map word with corresponding embedding
+				words_embeddings.put(word_line, embedding );
 			}
-			
-			String line=null;
-			   try {
-				   while ((line = reader.readLine()) != null){ 
-						  int count = 0;
-						  StringTokenizer tokenizedLine = new StringTokenizer(line," ");
-						  double[] feature = new double[tokenizedLine.countTokens()];
-							  						  
-						  while(tokenizedLine.hasMoreTokens()){
-							   feature[count]=Double.parseDouble(tokenizedLine.nextToken());
-							   count++;
-						  }
-						  centroid.add(feature);				 
-				   }
-				  
-			   }catch(Exception e){
-					Utilities.showMessage("Error reading file!", shell, true);
-					e.printStackTrace();
-		 			return null;
-			   }
-			   try {
-				   reader.close();
-			   }catch (FileNotFoundException e) {
-					Utilities.showMessage("Could not close File!", shell, true);
-					e.printStackTrace();
+		}catch(Exception e){
+			Utilities.showMessage("Error reading file!", null, true);
+			e.printStackTrace();
+ 			return null;
+	   }
+	   try {
+		   words_reader.close();
+		   embeddings_reader.close();
+	   }catch (FileNotFoundException e) {
+			Utilities.showMessage("Could not close File!", null, true);
+			e.printStackTrace();
+ 			return null;
+	   }	
+	   embeddingsLength = words_embeddings.values().iterator().next().length;
 
-		 			return null;
-			   }
-			   return centroid;
+	   return words_embeddings;
 	}
 	
 	public static List<String> ReadStopwords(String filePath, Shell shell) throws IOException{
