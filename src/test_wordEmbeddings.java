@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -23,14 +24,19 @@ public class test_wordEmbeddings {
 	//stopwords to be removed
     private static List<String> stopwords = new ArrayList<String>();
     private static String commonWordsPath = "Lucene\\common_words";
-    private static boolean removeStopwords = false;
+    private static boolean removeStopwords = true;
     private static boolean AddZeroIfTermDoesNotExist = false;
     private static boolean useTFIDF = true;
-    private static String xml_path = "Lucene\\clef2012\\";
-    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2012";
+    private static String xml_path = "Lucene\\clef2013\\";
+    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2013\\Compound";
     private static String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
     private static String embeddingsFilePath = "E:\\leonidas\\word2vecTools\\vectors.txt";
     private static int embeddingsLength = 0;
+    
+    
+    private static List<Integer> docsLength = new ArrayList<Integer>();
+    private static int total_words_found = 0;
+	private static int total_words_not_found = 0;
     
 	public static void main(String[] args) throws Exception{
 
@@ -71,6 +77,15 @@ public class test_wordEmbeddings {
         List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
         Utilities.write2TXT(test_features,test_file, null);
 		
+        ////////////////////////////////////////////////////
+        for (Integer legdog : docsLength) {
+			System.out.println(legdog);
+		}
+        int total = total_words_found+ total_words_not_found;
+        double sumOfDocsLength = total/docsLength.size();
+        System.out.println(" average length of docs : "+sumOfDocsLength);
+        ////////////////////////////////////////////////////
+        
 	}
 
 	public static boolean containsSubArray(List<double[]> list, double[] subarray) {
@@ -131,10 +146,10 @@ public class test_wordEmbeddings {
 	public static List<double[]> get_features(Map<String,double[]> word_embeddings,
 			String xml_dir, String mode) throws Exception{
 		
-		int total_words_found = 0;
-		int total_words_not_found = 0;
+		
 		int currentDoc = 0;
 		Map<String,Double> word_idf = new HashMap<String,Double>();
+		
 		
 		List<double[]> features = new ArrayList<double[]>();
 
@@ -157,6 +172,8 @@ public class test_wordEmbeddings {
 	        			+ " id : "+imagePath+" , found "+ total_words_found+", not found "+total_words_not_found+" out of "+ total_words +", doc  :"+ doc);
         	}
         	
+        	
+    		int docsLengthcounter = 0;
         	Map<String,double[]> Doc_word_embeddings = new HashMap<String,double[]>();
         	//get individual terms of sentence
         	String[] docTerms = doc.replaceAll("[\\W&&[^\\s]]", "").split("\\W+");   
@@ -175,6 +192,8 @@ public class test_wordEmbeddings {
 	            		continue;
 	            	}
             	}
+    			//System.out.print(termLower+" ");
+    			docsLengthcounter++;
     			
         		if(word_embeddings.containsKey(termLower)){
         			
@@ -212,6 +231,8 @@ public class test_wordEmbeddings {
         			total_words_not_found++;
         		}
         	}
+        	//System.out.println();
+        	docsLength.add(docsLengthcounter);
         	double[] feature_vector = new double[embeddingsLength];
         	if(Doc_word_embeddings.size() == 0){
         		Arrays.fill(feature_vector, 0);
