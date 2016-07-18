@@ -53,7 +53,6 @@ public class Read_Xml {
 		String mode = "train";
 		Read_Xml xml = new Read_Xml();
 		xml.ReadXml(train, null,databasePath,mode);
-		//xml.ReadXml(test_dir, null,databasePath,"test");
 		
 		for (TextualData image : xml.images) {
 			System.out.println("id :"+image.id +" caption :"+ image.AllFields);
