@@ -9,8 +9,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
@@ -19,87 +22,84 @@ import org.eclipse.swt.widgets.Shell;
 
 import Utils.Image.ImageFilter;
 
-/*
- * 
- * Requirements to successfully create statistics for a collection of Images :
- * 
- * 1) The name of the classes MUST be integer (0,1,2 etc ) and not strings ( 3D etc)!
- * 
- * 2) The numeration of the classes MUST start with 0 OR 1!
- * 
- * 
-*/
 
 public class Statistics {
 	private List<File> testImages = new ArrayList<File>();
-	private List<Integer> realCategory = new ArrayList<Integer>();
-	private List<Integer> predictedCategory = new ArrayList<Integer>();
+	private List<String> realCategory = new ArrayList<String>();
+	private List<String> predictedCategory = new ArrayList<String>();
 	private List<Integer> probabilities = new ArrayList<Integer>();
-	private HashMap<Integer,Integer> categories = new HashMap<Integer,Integer>();
+	private Map<String,Integer> categories = new HashMap<String,Integer>();
 	private double[] FP,TP,precision,recall,F1 ;
 	private double accuracy,macroF1;
 	private Shell shell;
+	private Map<String,Integer> categories_2_numbers;
 	
 	
-public void createMetrics(String projectPath, String DBsource,String resultsFile,boolean hasTrueLabels,Shell shell) throws Exception{
-	this.shell=shell;
-
-	
-	//[0] : train  , [1] test
-	String[] filaNames =Utilities.getTrainTest(new File(DBsource));
-	if(filaNames[1]==null) return;
-	
-	readTestImages(filaNames[1],hasTrueLabels);
-	readResults(resultsFile);
-	
-	if(hasTrueLabels){	 
-		 extractMetrics();
-		 writeStatisticsToFile(projectPath);
+	public class ImageResult{
+		public String ImageName,RealCategory,PredictedCategory;
 	}
-}
 	
-private void readTestImages(String testSet,boolean hasTrueLabels){
-		int countClasses=1;
+	public void createMetrics(String projectPath, String DBsource,String resultsFile,boolean hasTrueLabels,Shell shell) throws Exception{
+		this.shell=shell;
+	
+		
+		//[0] : train  , [1] test
+		String[] fileNames =Utilities.getTrainTest(new File(DBsource));
+		String testSet = fileNames[1];
+		if(testSet==null) return;
+		
+		if(hasTrueLabels){	
+			categories_2_numbers = Utilities.getSubFoldersOfFolder(testSet);
+			categories = Utilities.getNumberOfImagesPerCategory(testSet);
+		}
+		
+		readTestImages(testSet,hasTrueLabels);
+		readResults(resultsFile);
+		
+		if(hasTrueLabels){	 
+			 extractMetrics();
+			 writeStatisticsToFile(projectPath);
+		}
+	}
+	
+	private void readTestImages(String testSet,boolean hasTrueLabels){
 		String[] testFiles= ImageFilter.getDirFiles(testSet,Integer.MAX_VALUE,true );
 		for(int i=0;i<testFiles.length;i++){
 			testImages.add(new File(testFiles[i]));
-			
 			if (hasTrueLabels){
-				int category=Integer.valueOf(Utilities.GetParentFolder(testFiles[i]).split("\\.")[1]);
-				
-				if(!categories.containsKey((category)))
-					countClasses=1;
-				categories.put(category, countClasses++);
+				String category=Utilities.GetParentFolder(testFiles[i]).split("\\.")[1];
 				realCategory.add(category);
 			}
-			
 		}
-}
+	}
 
 private void extractMetrics(){
-	 FP = new double[categories.size()+1];
-	 TP = new double[categories.size()+1];
-	 precision = new double[categories.size()+1];
-	 recall = new double[categories.size()+1];
-	 F1 = new double[categories.size()+1];
-	 
-  	 //initialize arrays
-  	 for(int i=0;i<categories.size();i++){
-  		 FP[i]=0;
-  		 TP[i]=0;
-  		 recall[i]=0;
-  		 precision[i]=0;
-  		 F1[i]=0;
-  	 }
-   	for (int i =0 ;i <testImages.size();i++){
-  		if(predictedCategory.get(i)!=realCategory.get(i))
-  			FP[predictedCategory.get(i)]++;
-  		else
-  			TP[predictedCategory.get(i)]++;
+	 FP = new double[categories.size()];
+	 TP = new double[categories.size()];
+	 precision = new double[categories.size()];
+	 recall = new double[categories.size()];
+	 F1 = new double[categories.size()];
+
+	 //initialize arrays
+	 Arrays.fill(FP,0);
+	 Arrays.fill(TP,0);
+	 Arrays.fill(recall,0);
+	 Arrays.fill(precision,0);
+	 Arrays.fill(F1,0);
+	
+	//calculate True positive and false positive 
+	for (int i =0 ;i <testImages.size();i++){
+		String _predictedCategory = predictedCategory.get(i);
+		String _realCategory = categories_2_numbers.get(realCategory.get(i)).toString();
+	  	if(_predictedCategory.equals(_realCategory))
+	  		TP[Integer.valueOf(_predictedCategory)]++;
+	  	else
+	  		FP[Integer.valueOf(_predictedCategory)]++;
  	}
-  	for (Entry<Integer, Integer> entry : categories.entrySet())   {
-  		Integer category = entry.getKey();
-  		Integer sizeOfCategory = entry.getValue();
+	
+  	for (String _category: categories.keySet())   {
+  		int category = categories_2_numbers.get(_category);
+  		int sizeOfCategory = categories.get(_category);
 		recall[category]= TP[category]/sizeOfCategory;
 
 		if( (TP[category] + FP[category])!=0)
@@ -138,8 +138,9 @@ private void writeStatisticsToFile(String projectPath) throws IOException {
 	  
 	  	statisticsWriter.write("The columns below are : Category, Size of Category, True Positive,	False Positive,	Precision, Recall, F1\n");
 	  	
-		for (Entry<Integer, Integer> entry : categories.entrySet()){
-	  		Integer category = entry.getKey();
+		for (Entry<String, Integer> entry : categories.entrySet()){
+			String _category = entry.getKey();
+	  		int category = categories_2_numbers.get(_category);
 	  		Integer sizeOfCategory = entry.getValue();
 	  		statisticsWriter.write(category+"	"+" "+sizeOfCategory+"	  "+TP[category] +"	 "+FP[category]+" 	"
 	  			+Math.floor(precision[category] * 1e5) / 1e5+"		"+Math.floor(recall[category] * 1e5) / 1e5+"	"
@@ -153,8 +154,7 @@ private void writeStatisticsToFile(String projectPath) throws IOException {
 }
 
 private double[] computeF1Metric(double [] recall, double[]precision){
-	 double[] F1 = new double[categories.size()+1];
-
+	double[] F1 = new double[categories.size()];
 	for(int i=0;i<recall.length;i++){	
 		if(precision[i] + recall[i] != 0)
 			F1[i]= 2 * (recall[i] * precision[i] ) / ( recall[i] + precision[i] ); 
@@ -165,12 +165,12 @@ private double[] computeF1Metric(double [] recall, double[]precision){
 
 private double computeSum(double[] array){
 	double sum=0;
-	for(int i =0;i<array.length;i++)
-		sum +=array[i];
+	for(double i:array)
+	  sum+=i;
 	return sum;
 }
 
-private void readResults(String filePath) throws IOException {
+	private void readResults(String filePath) throws IOException {
 		   BufferedReader reader = null;
 		   int max=Integer.MIN_VALUE;
 		 	try {
@@ -179,29 +179,30 @@ private void readResults(String filePath) throws IOException {
 				e1.printStackTrace();
 				
 			}
-			
 			String line=null;
 			   try {
-				   while ((line = reader.readLine()) != null){	
+				   while ((line = reader.readLine()) != null){
+					   if(line.contains("labels")) 
+						   continue;
+					   
 					   max=Integer.MIN_VALUE;
 					
 					   StringTokenizer tokens = new StringTokenizer(line," ");
-					   String number =tokens.nextToken();
-					   if(Utilities.isNumeric( number ))
-					   {
-						   //add category
-						   predictedCategory.add( (int) Double.parseDouble(number) );
-						   if(tokens.countTokens()>=1){
-							   while(tokens.hasMoreTokens()){
-								  double probability= Math.floor( (Double.parseDouble(tokens.nextToken())) * 1e5) / 1e5 ;
-								  probability*=10000;
-								  if (max<probability)
-									  max=(int)probability;
-							   }
-							    //add probability
-							   	probabilities.add(max);
+					   String category =  String.valueOf( (int) Double.parseDouble(tokens.nextToken()) ) ;
+					   
+					   //add category
+					   predictedCategory.add( category );
+					   if(tokens.countTokens()>=1){
+						   while(tokens.hasMoreTokens()){
+							  double probability= Math.floor( (Double.parseDouble(tokens.nextToken())) * 1e5) / 1e5 ;
+							  probability*=10000;
+							  if (max<probability)
+								  max=(int)probability;
 						   }
+						    //add probability
+						   	probabilities.add(max);
 					   }
+					   
 				   }
 			   }
 			   catch(Exception e)  {   e.printStackTrace();   }
@@ -215,10 +216,18 @@ public int getImagesSize() {
 public File getImage(int index) {
 	return testImages.get(index);
 }
-public int getPredictedCategory(int index) {
-	return predictedCategory.get(index);
+public String getPredictedCategory(int index) {
+	String _category = "Not Found";
+	for (String category : categories_2_numbers.keySet()) {
+	      if ( categories_2_numbers.get(category) == Integer.valueOf(predictedCategory.get(index)) ) {
+	        return category;
+	      }
+	}
+	
+	return _category;
 }
-public int getRealCategory(int index) {
+
+public String getRealCategory(int index) {
 	return realCategory.get(index);
 }
 public double getAccuracy() {

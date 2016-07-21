@@ -1454,7 +1454,7 @@ private void statistics(Label indexLabel,Label imageLabel,Display display,Label 
 		return;
 	
 	categorizedlab.setText(""+metrics.getRealCategory(statisticsCounter));
-	if(metrics.getPredictedCategory(statisticsCounter)==metrics.getRealCategory(statisticsCounter)){
+	if( metrics.getPredictedCategory(statisticsCounter).equals(metrics.getRealCategory(statisticsCounter)) ){
 		SafeLabel.setForeground(display.getSystemColor(SWT.NULL));
 		SafeLabel.setText("Correct");
 	}else {

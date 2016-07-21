@@ -5,11 +5,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.Map.Entry;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -17,6 +17,7 @@ import Lucene.Read_Xml;
 import Lucene.Read_Xml.TextualData;
 import Lucene.test_tfidf.TfIdf;
 import Utils.Utilities;
+import Utils.Image.ImageFilter;
 
 public class test_wordEmbeddings {
 	
@@ -34,42 +35,52 @@ public class test_wordEmbeddings {
     
 	public static void main(String[] args) throws Exception{
 
-    	String stopwordsName = "withCommonWords";
-    	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
-    	String tfidf = "_tf";
-    	
-    	if(useTFIDF){
-    		tfidf = "_tfidf";
-    	}
-    	
-    	if(removeStopwords){
-    		stopwordsName="NoCommonWords";
-			stopwords = ReadStopwords(commonWordsPath, null);
-    	}
-    	if(AddZeroIfTermDoesNotExist)
-    		zeroIfTermNotExist = "_zeroIfTermNotExists";
-    	
-		String train_dir = xml_path+"train_figures.xml";
-        String test_dir = xml_path+"test_figures.xml";
 		
-        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
-		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
-
-		System.out.println(train_file);
-		System.out.println(test_file);
-		
-		System.out.println("loading embeddings...");
+		Map<String,Integer> categories = Utilities.getSubFoldersOfFolder(databasePath+"\\TestSet");
 		
 		
-		Map<String,double[]> word_embeddings = readEmbeddings();
 		
-        System.out.println("extracting train features...");
-		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
-        Utilities.write2TXT(train_features,train_file, null);
-
-        System.out.println("extracting test features...");
-        List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
-        Utilities.write2TXT(test_features,test_file, null);
+		for (Entry<String, Integer> entry : categories.entrySet()){
+			System.out.println(entry.getKey() + " length " +entry.getValue() );
+		}
+		
+		
+//    	String stopwordsName = "withCommonWords";
+//    	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
+//    	String tfidf = "_tf";
+//    	
+//    	if(useTFIDF){
+//    		tfidf = "_tfidf";
+//    	}
+//    	
+//    	if(removeStopwords){
+//    		stopwordsName="NoCommonWords";
+//			stopwords = ReadStopwords(commonWordsPath, null);
+//    	}
+//    	if(AddZeroIfTermDoesNotExist)
+//    		zeroIfTermNotExist = "_zeroIfTermNotExists";
+//    	
+//		String train_dir = xml_path+"train_figures.xml";
+//        String test_dir = xml_path+"test_figures.xml";
+//		
+//        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
+//		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
+//
+//		System.out.println(train_file);
+//		System.out.println(test_file);
+//		
+//		System.out.println("loading embeddings...");
+//		
+//		
+//		Map<String,double[]> word_embeddings = readEmbeddings();
+//		
+//        System.out.println("extracting train features...");
+//		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
+//        Utilities.write2TXT(train_features,train_file, null);
+//
+//        System.out.println("extracting test features...");
+//        List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
+//        Utilities.write2TXT(test_features,test_file, null);
 		
 	}
 

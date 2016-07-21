@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -38,7 +39,8 @@ public class IRMFactory implements Runnable {
 	private GBocDescriptor gboc = new GBocDescriptor();
 	private MixedBovwBoc mixedBovwBoc = new MixedBovwBoc();
 	private MixedGbocBovw mixedgBocBovw = new MixedGbocBovw();
-
+	//categories with numeric representation for each one
+	private Map<String,Integer> categories;
 	 
 	@Override
 	public void run() {
@@ -67,6 +69,8 @@ public class IRMFactory implements Runnable {
    		String[] fileNames =Utilities.getTrainTest(dir);
    		if ( !Utilities.collectionFilesAreCorrect(fileNames,shell) ) return false;
    	
+   		categories = Utilities.getSubFoldersOfFolder(fileNames[1]);
+   		
    		testFiles= ImageFilter.getDirFiles(fileNames[1],Integer.MAX_VALUE,true );
    		trainFiles= ImageFilter.getDirFiles(fileNames[0],Integer.MAX_VALUE,true );
    	  	
@@ -150,7 +154,8 @@ public class IRMFactory implements Runnable {
 			imgVocVector = extractFeatures.extractImage(imagePath,graphBocFeature);
 			
 			String category=Utilities.GetParentFolder(imagePath).split("\\.")[1];
-
+			category = categories.get(category).toString();
+			
 			//write to file 
 			if(featuresFormat.equals("LibSVM Format"))
 				Utilities.writeHistogram(descriptorWriter1,category,imgVocVector,true);

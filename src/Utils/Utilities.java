@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,13 +13,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
 
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -458,6 +462,42 @@ public class Utilities {
 		}
 		return returnPath;
 	}
+	
+	public static Map<String,Integer> getSubFoldersOfFolder(String path){
+		Map<String,Integer> categories = new HashMap<String,Integer>();
+		
+		File directory = new File(path);
+		File[] subdirs = directory.listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
+		for (int i =0;i<subdirs.length;i++) {
+			categories.put(subdirs[i].getName(), i);
+		}
+		return categories;
+	}
+	
+	public static String[] getSubFoldersNamesOfFolder(String path){
+		
+		File directory = new File(path);
+		File[] subdirs = directory.listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
+		String[] _subdirs = new String[subdirs.length];
+		for (int i =0;i<subdirs.length;i++) {
+			_subdirs[i] = subdirs[i].getAbsolutePath();
+		}
+		return _subdirs;
+	}
+	
+	public static Map<String,Integer> getNumberOfImagesPerCategory(String path){
+		Map<String,Integer> categories_numImages = new HashMap<String,Integer>();
+		
+		String[] categories = getSubFoldersNamesOfFolder(path);
+		for (int i = 0; i < categories.length; i++) {
+			
+			int numbersOfCategory = new File(categories[i]).listFiles(new ImageFilter()).length;
+			String imageName = getName(categories[i]);
+			categories_numImages.put(imageName, numbersOfCategory);
+		}
+		return categories_numImages;
+	}
+	
 	
 	public static String[] getNameUntilTestTrain(String path){
 	  	 
