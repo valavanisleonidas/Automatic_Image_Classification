@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Spyridon Stathopoulos
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,21 +16,13 @@
  */
 package Utils.cluster;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  *
  * @author Spyridon Stathopoulos
  */
-public class CPoint implements Comparable<CPoint>, com.stromberglabs.cluster.Clusterable {
-
+public class CPoint implements Comparable<CPoint>{
     private float[] vector;
 
     public CPoint(double[] vector) {
@@ -38,6 +30,28 @@ public class CPoint implements Comparable<CPoint>, com.stromberglabs.cluster.Clu
         for (int i = 0; i < vector.length; i++) {
             this.vector[i] = (float) vector[i];
         }
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + Arrays.hashCode(this.vector);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final CPoint other = (CPoint) obj;
+        if (!Arrays.equals(this.vector, other.vector)) {
+            return false;
+        }
+        return true;
     }
 
     public CPoint(float[] vector) {
@@ -51,26 +65,14 @@ public class CPoint implements Comparable<CPoint>, com.stromberglabs.cluster.Clu
         }
         return ret;
     }
-
+    
+    
     public double distanceFrom(CPoint t) {
-        double d = getL2Distance(this.vector, t.vector);
+        double d =Utils.DistanceFunctions.getL2Distance(this.vector, t.vector);
         //System.out.println("dist(p1,p2)=>\ndist(["+ ArrayUtil.arrayToString(vector)+"], ["+ArrayUtil.arrayToString(t.vector)+"]= "+d);
         return d;
-    }
-
-    private static double getL2Distance(float[] point1, float[] point2) {
-        double dist = 0;
-        for (int i = 0; i < point1.length; i++) {
-            dist += (point1[i] - point2[i]) * (point1[i] - point2[i]);
-        }
-        return Math.sqrt(dist);
-    }
-
-    @Override
-    public float[] getLocation() {
-        return this.vector;
-    }
-
+    }   
+    
     @Override
     public int compareTo(CPoint o) {
         float myTotal = 0;
@@ -85,81 +87,5 @@ public class CPoint implements Comparable<CPoint>, com.stromberglabs.cluster.Clu
         return (myTotal > oTotal ? -1
                 : (myTotal == oTotal ? 0 : 1));
     }
-
-    /**
-     * Writes a cluster centers to a binary file with the following format:
-     * [0]<integer>: number of centers (integer) [1]<integer>: size of center
-     * point (integer) [...]<double>: array data
-     *
-     * @param clusters
-     * @param file
-     */
-    public static void writeClusters(List<CPoint> clusters, String file) {
-        if (clusters.size() > 0) {
-            try {
-                // Create an output stream to the file.
-                FileOutputStream fileOutput = new FileOutputStream(file);
-                // Wrap the FileOutputStream with a DataOutputStream
-                DataOutputStream dataOut = new DataOutputStream(fileOutput);
-                // Write the data to the file
-                // [0]<integer>: number of centers (integer) 
-                dataOut.writeInt(clusters.size());
-                // [1]<integer>: size of center
-                dataOut.writeInt(clusters.get(0).getVector().length);
-                // [...]<double>: array data
-                for (CPoint p : clusters) {
-                    double[] vector = p.getVector();
-                    for (int i = 0; i < vector.length; i++) {
-                        dataOut.writeDouble(vector[i]);
-                    }
-                    dataOut.flush();
-                }
-                fileOutput.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    public static List<CPoint> readClusters(String file) {
-        List<CPoint> ret = new ArrayList<CPoint>();
-        try {
-            // Wrap the FileInputStream with a DataInputStream
-            FileInputStream fileInput = new FileInputStream(file);
-            DataInputStream dataIn = new DataInputStream(fileInput);
-            // [0]<integer>: number of centers (integer) 
-            int nClusters = dataIn.readInt();
-            // [1]<integer>: size of center
-            int vLen = dataIn.readInt();
-            // [...]<double>: array data            
-            for (int i = 0; i < nClusters; i++) {
-                double[] cVector = new double[vLen];
-                for (int j = 0; j < vLen; j++) {
-                    cVector[j] = dataIn.readDouble();
-                }
-                ret.add(new CPoint(cVector));
-            }
-            //Close the file.
-            dataIn.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return ret;
-    }
-
-    public static int clusterIndexOf(List<CPoint> clusters, CPoint p) {
-        int ret = 0;
-        if (clusters.size() > 0) {
-            double distance = clusters.get(0).distanceFrom(p);
-            double tmp;
-            for (int i = 1; i < clusters.size(); i++) {
-                tmp = clusters.get(i).distanceFrom(p);
-                if (tmp < distance) {
-                    distance = tmp;
-                    ret = i;
-                }
-            }
-        }
-        return ret;
-    }
+   
 }

@@ -2,8 +2,8 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import Lucene.Read_Xml;
-import Lucene.Read_Xml.TextualData;
+import Text.Read_Xml;
+import Text.Read_Xml.TextualData;
 import Utils.Utilities;
 import Utils.Image.ImageFilter;
 
@@ -21,7 +21,7 @@ public class GetCaptionForEnriched {
 		List<textData> related_images = new ArrayList<textData>();
 		
 		String train_captions_xml = "Lucene\\clef2013\\train_figures.xml";
-		String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\Clef2016\\enriched\\TrainSet";
+		String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\Clef2016\\super_enriched\\TrainSet";
 		
 	     Read_Xml xml = new Read_Xml();
 	     //i have all captions for 2013 train images

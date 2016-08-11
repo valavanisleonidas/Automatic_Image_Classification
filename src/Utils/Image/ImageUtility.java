@@ -26,6 +26,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import static java.awt.image.BufferedImage.TYPE_INT_RGB;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +39,8 @@ import javax.imageio.ImageIO;
  */
 public class ImageUtility {
     
+	public enum Format{ JPEG, PNG, BMP, WBMP, GIF };
+	
 	//get buffered image from path 'imageFile'
 	public static BufferedImage getImage(String imageFile) {
         BufferedImage img = null;
@@ -59,6 +62,16 @@ public class ImageUtility {
         }
         return img;
     }
+	
+	public static void saveImage(BufferedImage img, Format format, String file){
+        File outputfile = new File(file);
+        try {
+            ImageIO.write(img, format.toString(), outputfile);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }      
+	
     //resizes image to given width and height
     public static BufferedImage resizeImage(BufferedImage img, int newWidth, int newHeight,
             boolean keepAspectRatio) {

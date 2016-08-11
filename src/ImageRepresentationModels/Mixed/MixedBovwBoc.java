@@ -2,7 +2,6 @@ package ImageRepresentationModels.Mixed;
 
 
 import ImageRepresentationModels.ExtractFeatures;
-import ImageRepresentationModels.BoC.BoCDescriptor;
 import ImageRepresentationModels.BoC.BagOfColors;
 import ImageRepresentationModels.BoVW.BoVW.BoVWModel;
 import Utils.Utilities;
@@ -12,13 +11,13 @@ public class MixedBovwBoc implements ExtractFeatures{
 	 private double weight1,weight2;
 	 private BoVWModel bovw = new BoVWModel();
 	 private BagOfColors boc = new BagOfColors();
-		
+
+	 //TODO CHECK BOC
 public double[] extractImage(String imagePath,double[] imageFeature) throws Exception {
 
 		System.out.println("mixed :"+imagePath);
 		System.out.println("early Fusion");
-
-		boc.setBocDescriptor( new BoCDescriptor(getBoc().getPalete(),Utilities.findColorSpace(getBoc().getColorSpace())) );
+		
 	   
 	 	//extract features of image
 		double [] BoVW= bovw.extractImage(imagePath,null);	

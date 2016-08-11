@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.swt.widgets.Shell;
+
+import Classification.LibSVM.svm_predict;
 import Utils.Utilities;
-import Classification.libSVM.svm_predict;
 
 public class TestImages implements Runnable{
 

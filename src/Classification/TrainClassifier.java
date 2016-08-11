@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.eclipse.swt.widgets.Shell;
-import Classification.libSVM.svm_train;
+
+import Classification.LibSVM.svm_train;
 import Utils.Utilities;
 
 

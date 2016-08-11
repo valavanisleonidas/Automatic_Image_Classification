@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import Lucene.Read_Xml;
-import Lucene.Read_Xml.TextualData;
+import Text.Read_Xml;
+import Text.Read_Xml.TextualData;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.process.DocumentPreprocessor;

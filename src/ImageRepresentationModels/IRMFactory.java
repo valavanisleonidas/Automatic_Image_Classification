@@ -14,7 +14,6 @@ import Utils.Utilities;
 import Utils.Image.ImageFilter;
 import GUI.ProgressDialog;
 import ImageRepresentationModels.BoC.BagOfColors;
-import ImageRepresentationModels.BoC.BoCDescriptor;
 import ImageRepresentationModels.BoVW.BoVW.BoVWModel;
 import ImageRepresentationModels.GBoC.GBocDescriptor;
 import ImageRepresentationModels.Mixed.MixedBovwBoc;
@@ -251,7 +250,7 @@ public class IRMFactory implements Runnable {
 		+"-"+kmeansChoice+"-test-VisualVocabulary.txt");
 		
 		if (train.exists() && test.exists()){
-			Utilities.showMessage("Boc  "+libsvm+" "+boc.getBocDescriptor()+" files already exists!", shell, false);
+			Utilities.showMessage("Boc  "+libsvm+" files already exists!", shell, false);
 			return;
 		}
 		
@@ -269,7 +268,7 @@ public class IRMFactory implements Runnable {
 			+"-"+kmeansChoice+"-test-VisualVocabulary.txt");
 			
 			if (train_libsvm.exists() && test_libsvm.exists()){
-				Utilities.showMessage("Boc libsvm "+boc.getBocDescriptor()+" files already exists!", shell, false);
+				Utilities.showMessage("Boc libsvm files already exists!", shell, false);
 				return;
 			}
 			//open files for writing
@@ -279,9 +278,6 @@ public class IRMFactory implements Runnable {
 			
 		}
 		
-		
-		BoCDescriptor bocDescriptor=new BoCDescriptor(getBoc().getPalete(),Utilities.findColorSpace(getBoc().getColorSpace()));
-		boc.setBocDescriptor(bocDescriptor);
 			
 		//set object for interface
 		extractFeatures=boc;

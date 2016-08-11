@@ -1,4 +1,4 @@
-package Classification.libSVM;
+package Classification.LibSVM;
 
 import libsvm.*;
 import java.io.*;

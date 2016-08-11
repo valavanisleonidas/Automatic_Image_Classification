@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8">
 <startupMetadata>
-  <ProjectName>clef2012_test</ProjectName>
-  <DatabaseSource>C:\Users\leonidas\Desktop\libsvm\databases\Clef2012</DatabaseSource>
+  <ProjectName>clef2016_super_enriched</ProjectName>
+  <DatabaseSource>C:\Users\leonidas\Desktop\libsvm\databases\Clef2016\super_enriched</DatabaseSource>
 </startupMetadata>

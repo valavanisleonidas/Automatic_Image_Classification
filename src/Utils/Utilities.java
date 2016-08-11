@@ -59,7 +59,7 @@ public class Utilities {
 	public static boolean isNumeric(String str)  {  
 		boolean isNumeric=true;
 		  try  {  
-		    double d = Double.parseDouble(str);  
+		    Double.parseDouble(str);  
 		  } catch(NumberFormatException nfe)  {  
 		    return isNumeric=false;  
 		  }  
@@ -200,6 +200,7 @@ public class Utilities {
 		List<double[]> array = intArray2DoubleList(palete);
 		write2TXT(array,path,shell);	
 	}
+	
 	//writes palete to path
 	public static void write2TXT(List<double[]> colors , String path,Shell shell) throws IOException{
 		 BufferedWriter centroidWriter = null;
@@ -267,21 +268,21 @@ public class Utilities {
 	
 	
 	public static BufferedWriter openFilesForWriting(String filePath,Shell shell) throws IOException{
-			File file = null ;
-		
-			try {
-				file = new File (filePath);
-			}catch(NullPointerException e ){
-				Utilities.showMessage("File Not Found!", shell, true);
-				return null;
-			}
-			try{
-				return  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file))); 
-			}catch(FileNotFoundException ex){
-				Utilities.showMessage("Error opening file!", shell, true);
-				return null;
-			}
+		File file = null ;
+	
+		try {
+			file = new File (filePath);
+		}catch(NullPointerException e ){
+			Utilities.showMessage("File Not Found!", shell, true);
+			return null;
 		}
+		try{
+			return  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file))); 
+		}catch(FileNotFoundException ex){
+			Utilities.showMessage("Error opening file!", shell, true);
+			return null;
+		}
+	}
 		
 	public static BufferedReader openFilesForReading(String filePath,Shell shell) throws IOException{
 		
@@ -296,8 +297,8 @@ public class Utilities {
 		
 	//Comment color correlogram does not need cluster because it is one vector for each image
 	public static void writeFeatures2TXT(String path,int sampleSize,String descriptorChoice,
-			Features descriptor,BufferedWriter descriptorWriter, String kmeans,
-			List<double[]> descriptorFeatures,Shell shell) throws Exception{
+		Features descriptor,BufferedWriter descriptorWriter, String kmeans,
+		List<double[]> descriptorFeatures,Shell shell) throws Exception{
 		try{
 				int counter=0;
 				final ProgressDialog progress = new ProgressDialog();

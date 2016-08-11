@@ -9,15 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Map.Entry;
 
 import org.eclipse.swt.widgets.Shell;
 
-import Lucene.Read_Xml;
-import Lucene.Read_Xml.TextualData;
-import Lucene.test_tfidf.TfIdf;
+import Text.Read_Xml;
+import Text.Read_Xml.TextualData;
+import Text.test_tfidf.TfIdf;
 import Utils.Utilities;
-import Utils.Image.ImageFilter;
 
 public class test_wordEmbeddings {
 	
@@ -26,61 +24,51 @@ public class test_wordEmbeddings {
     private static String commonWordsPath = "Lucene\\common_words";
     private static boolean removeStopwords = false;
     private static boolean AddZeroIfTermDoesNotExist = false;
-    private static boolean useTFIDF = true;
-    private static String xml_path = "Lucene\\clef2012\\";
-    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2012";
+    private static boolean useTFIDF = false;
+    private static String xml_path = "Lucene\\clef2016\\super_enriched\\";
+    private static String databasePath = "C:\\Users\\leonidas\\Desktop\\libsvm\\databases\\clef2016\\super_enriched";
     private static String typeFilePath = "E:\\leonidas\\word2vecTools\\types.txt";
     private static String embeddingsFilePath = "E:\\leonidas\\word2vecTools\\vectors.txt";
     private static int embeddingsLength = 0;
     
 	public static void main(String[] args) throws Exception{
+		
+    	String stopwordsName = "withCommonWords";
+    	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
+    	String tfidf = "_tf";
+    	
+    	if(useTFIDF){
+    		tfidf = "_tfidf";
+    	}
+    	
+    	if(removeStopwords){
+    		stopwordsName="NoCommonWords";
+			stopwords = ReadStopwords(commonWordsPath, null);
+    	}
+    	if(AddZeroIfTermDoesNotExist)
+    		zeroIfTermNotExist = "_zeroIfTermNotExists";
+    	
+		String train_dir = xml_path+"train_figures.xml";
+        String test_dir = xml_path+"test_figures.xml";
+		
+        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
+		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
 
+		System.out.println(train_file);
+		System.out.println(test_file);
 		
-		Map<String,Integer> categories = Utilities.getSubFoldersOfFolder(databasePath+"\\TestSet");
-		
-		
-		
-		for (Entry<String, Integer> entry : categories.entrySet()){
-			System.out.println(entry.getKey() + " length " +entry.getValue() );
-		}
+		System.out.println("loading embeddings...");
 		
 		
-//    	String stopwordsName = "withCommonWords";
-//    	String zeroIfTermNotExist = "_notExistedTermsDiscarded";
-//    	String tfidf = "_tf";
-//    	
-//    	if(useTFIDF){
-//    		tfidf = "_tfidf";
-//    	}
-//    	
-//    	if(removeStopwords){
-//    		stopwordsName="NoCommonWords";
-//			stopwords = ReadStopwords(commonWordsPath, null);
-//    	}
-//    	if(AddZeroIfTermDoesNotExist)
-//    		zeroIfTermNotExist = "_zeroIfTermNotExists";
-//    	
-//		String train_dir = xml_path+"train_figures.xml";
-//        String test_dir = xml_path+"test_figures.xml";
-//		
-//        String test_file = xml_path+"embeddings_test"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
-//		String train_file = xml_path+"embeddings_train"+zeroIfTermNotExist+"_"+stopwordsName+tfidf+".txt";
-//
-//		System.out.println(train_file);
-//		System.out.println(test_file);
-//		
-//		System.out.println("loading embeddings...");
-//		
-//		
-//		Map<String,double[]> word_embeddings = readEmbeddings();
-//		
-//        System.out.println("extracting train features...");
-//		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
-//        Utilities.write2TXT(train_features,train_file, null);
-//
-//        System.out.println("extracting test features...");
-//        List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
-//        Utilities.write2TXT(test_features,test_file, null);
+		Map<String,double[]> word_embeddings = readEmbeddings();
+		
+        System.out.println("extracting train features...");
+		List<double[]> train_features = get_features(word_embeddings,train_dir,"train");
+        Utilities.write2TXT(train_features,train_file, null);
+
+        System.out.println("extracting test features...");
+        List<double[]> test_features = get_features(word_embeddings,test_dir,"test");
+        Utilities.write2TXT(test_features,test_file, null);
 		
 	}
 

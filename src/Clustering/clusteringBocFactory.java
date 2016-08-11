@@ -16,18 +16,13 @@
  */
 package Clustering;
 
-import ImageRepresentationModels.BoC.BoCDescriptor;
+import ImageRepresentationModels.BoC.BoCLibrary;
 import Utils.Image.ImageFilter;
 import Utils.Image.ColorConversion.ColorSpace;
 import Utils.cluster.CPoint;
 import Utils.Utilities;
 
-import com.stromberglabs.cluster.AbstractKClusterer;
-import com.stromberglabs.cluster.KMeansClusterer;
-
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.eclipse.swt.widgets.Shell;
 
@@ -35,6 +30,8 @@ import org.eclipse.swt.widgets.Shell;
 public class clusteringBocFactory implements Runnable {
 
 	 private String clusterDBPath, projectPath,comboKMeansChoice,colorspace,model;
+	 private static int resize = 256;
+	 private static int patches = 64;
 	 private int numOfColors,sampleLimit;
 	 private int [][]palete;
 	 private Shell shell;
@@ -50,9 +47,7 @@ public class clusteringBocFactory implements Runnable {
 	  }	
 	
 	  public void performCluster() throws Exception{
-		  //get colorspace given by user
-       
-	   boolean debug = true;  
+	   
 	   cs = Utilities.findColorSpace(colorspace);
        String paleteFileDat= isDistinctColors 
 	    		? projectPath+"\\distinct_palete"+numOfColors+"-"+cs.toString()+".dat" 
@@ -71,8 +66,8 @@ public class clusteringBocFactory implements Runnable {
  	    		: projectPath+"\\palete"+numOfColors+"-"+cs.toString()+".txt";
         if(comboKMeansChoice.equals("Lire")){
         	 try {
- 	        	 palete=BoCDescriptor.createPaletteLire(sampleImages, cs, numOfColors, paleteFileDat, debug,isDistinctColors);
- 	      	     Utilities.writePalete2TXT(palete, outputPaleteName,shell);	    
+        		 palete = BoCLibrary.createPalette(paleteFileDat, sampleImages, resize, patches, numOfColors, isDistinctColors, cs);
+        		 Utilities.writePalete2TXT(palete, outputPaleteName,shell);	    
 
  	        	Utilities.showMessage("Lire Clustering with "+model+" , number of colors : "+numOfColors +" "
 			    			+ " , color space : "+colorspace+"  completed successfully",shell,false);
@@ -86,41 +81,9 @@ public class clusteringBocFactory implements Runnable {
 				 sampleImages=null;
 
  	        }
-        }else  if(comboKMeansChoice.equals("Stromberg Lab")){
-        	  try {
-				palete=BoCDescriptor.createPaletteStrombergLab(sampleImages, cs, numOfColors, paleteFileDat, debug,isDistinctColors);
-  	    	    
-				Utilities.writePalete2TXT(palete, outputPaleteName,shell);	    
-
-				Utilities.showMessage("Stromberg Lab Clustering with "+model+" , number of colors : "+numOfColors +" "
-		    			+ " , color space : "+colorspace+" completed successfully",shell,false);
-
-
-		        sampleImages=null;
-
-			} catch (Exception e) {
-		        sampleImages=null;
-		        Utilities.showMessage("Stromberg Lab Clustering with "+model+" , number of colors : "+numOfColors +" "
-		    			+ " , color space : "+colorspace+" failed",shell,true);
-				e.printStackTrace();
-
-			}                            
         }
 
 	}
-	  
-	  
-	public static List<CPoint> KMeansStromer(List<CPoint> points, int k) {
-        List<CPoint> ret = new ArrayList<CPoint>();
-        AbstractKClusterer ek = new KMeansClusterer();
-        com.stromberglabs.cluster.Cluster[] cl = ek.cluster(points, k);
-          for (int i = 0; i < cl.length; i++) {
-            //System.out.println("Cluster["+i+"]: " + ArrayConvert.arrayToString(cl[i].getLocation()));
-            ret.add(new CPoint(cl[i].getLocation()));
-        }
-        return ret;
-    }
-
  
 public void setComboKMeansChoice(String comboKMeansChoice) {
 	this.comboKMeansChoice = comboKMeansChoice;
